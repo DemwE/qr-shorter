@@ -4,7 +4,7 @@ URL shortener + QR code generator with redirect/QR statistics and light/dark mod
 
 ## Features
 
-- Short long links into unique codes.
+- Shorten long links into unique codes.
 - Redirect by visiting `/{code}`.
 - Generate QR code for each short URL (`/api/qr/{code}`).
 - Track redirect counts and QR scan counts.

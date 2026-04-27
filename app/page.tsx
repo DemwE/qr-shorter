@@ -107,7 +107,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-8">
-        <div className="text-4xl font-extrabold text-primary">Bitly</div>
+        <div className="text-4xl font-extrabold text-primary">QR Shorter</div>
         <button
           type="button"
           onClick={toggleTheme}
