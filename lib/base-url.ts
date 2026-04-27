@@ -31,17 +31,17 @@ export async function getBaseUrl(): Promise<string> {
     }
   }
 
-  const vercelProductionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  if (vercelProductionHost) {
-    const normalized = normalizeEnvBaseUrl(vercelProductionHost);
+  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelProductionUrl) {
+    const normalized = normalizeEnvBaseUrl(vercelProductionUrl);
     if (normalized) {
       return normalized;
     }
   }
 
-  const vercelHost = process.env.VERCEL_URL;
-  if (vercelHost) {
-    const normalized = normalizeEnvBaseUrl(vercelHost);
+  const vercelUrl = process.env.VERCEL_URL;
+  if (vercelUrl) {
+    const normalized = normalizeEnvBaseUrl(vercelUrl);
     if (normalized) {
       return normalized;
     }
