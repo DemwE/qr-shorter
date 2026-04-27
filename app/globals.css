@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f5f6fa;
+  --surface: #ffffff;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --primary: #2563eb;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+}
+
+.dark {
+  --background: #020617;
+  --surface: #0f172a;
+  --foreground: #e2e8f0;
+  --muted: #94a3b8;
+  --primary: #3b82f6;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+}
