@@ -6,27 +6,45 @@ function normalizeEnvBaseUrl(value: string): string {
     return "";
   }
 
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-    return trimmed.replace(/\/+$/, "");
-  }
+  const candidate =
+    trimmed.startsWith("http://") || trimmed.startsWith("https://")
+      ? trimmed
+      : `https://${trimmed}`;
 
-  return `https://${trimmed}`.replace(/\/+$/, "");
+  try {
+    const parsed = new URL(candidate);
+    if (!parsed.hostname) {
+      return "";
+    }
+    return parsed.origin;
+  } catch {
+    return "";
+  }
 }
 
 export async function getBaseUrl(): Promise<string> {
   const configuredBaseUrl = process.env.NEXT_PUBLIC_BASE_URL;
   if (configuredBaseUrl) {
-    return normalizeEnvBaseUrl(configuredBaseUrl);
+    const normalized = normalizeEnvBaseUrl(configuredBaseUrl);
+    if (normalized) {
+      return normalized;
+    }
   }
 
   const vercelProductionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
   if (vercelProductionHost) {
-    return normalizeEnvBaseUrl(vercelProductionHost);
+    const normalized = normalizeEnvBaseUrl(vercelProductionHost);
+    if (normalized) {
+      return normalized;
+    }
   }
 
   const vercelHost = process.env.VERCEL_URL;
   if (vercelHost) {
-    return normalizeEnvBaseUrl(vercelHost);
+    const normalized = normalizeEnvBaseUrl(vercelHost);
+    if (normalized) {
+      return normalized;
+    }
   }
 
   const headerStore = await headers();
