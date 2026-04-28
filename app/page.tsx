@@ -26,6 +26,12 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastStatsUrl, setLastStatsUrl] = useState<string | null>(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+    return localStorage.getItem("lastStatsUrl");
+  });
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") {
       return "light";
@@ -96,6 +102,8 @@ export default function HomePage() {
 
       const nextResult = payload as ApiResult;
       setResult(nextResult);
+      setLastStatsUrl(nextResult.statsUrl);
+      localStorage.setItem("lastStatsUrl", nextResult.statsUrl);
       setUrl("");
       await loadStats(nextResult.publicId);
     } catch (err) {
@@ -107,45 +115,76 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-8">
-        <div className="text-4xl font-extrabold text-primary">QR Shorter</div>
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
-        >
-          Switch theme
-        </button>
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6 sm:py-8">
+        <div className="text-3xl font-extrabold text-primary sm:text-4xl">QR Shorter</div>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <a
+            href={lastStatsUrl ?? "#"}
+            aria-label="Open last stats"
+            title={lastStatsUrl ? "Open last stats" : "No history yet"}
+            onClick={(event) => {
+              if (!lastStatsUrl) {
+                event.preventDefault();
+              }
+            }}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-5 w-5"
+              aria-hidden="true"
+            >
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <path d="M3 3v6h6" />
+              <path d="M12 7v5l3 3" />
+            </svg>
+          </a>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          >
+            Switch theme
+          </button>
+        </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-4xl flex-col items-center gap-10 px-6 pb-20 pt-8 text-center">
-        <div className="space-y-6">
-          <h1 className="text-5xl font-extrabold leading-tight sm:text-6xl">
+      <main className="mx-auto flex w-full max-w-4xl flex-col items-center gap-8 px-4 pb-16 pt-4 text-center sm:gap-10 sm:px-6 sm:pb-20 sm:pt-8">
+        <div className="space-y-4 sm:space-y-6">
+          <h1 className="text-4xl font-extrabold leading-tight sm:text-6xl">
             <span className="text-primary">Skracaj</span>, udostępniaj,{" "}
-            <span className="text-primary">mierz</span>
+            <span className="text-primary">dziel się</span>
           </h1>
-          <p className="mx-auto max-w-3xl text-lg leading-9 text-muted">
+          <p className="mx-auto max-w-3xl text-base leading-7 text-muted sm:text-lg sm:leading-9">
             Shorten long URLs, generate QR codes, and measure clicks and scans from one place.
           </p>
         </div>
 
         <form
           onSubmit={onSubmit}
-          className="flex w-full max-w-3xl flex-col gap-4 rounded-4xl border border-slate-200 bg-surface p-4 shadow-sm dark:border-slate-700"
+          className="flex w-full max-w-3xl flex-col gap-3 rounded-3xl border border-slate-200 bg-surface p-3 shadow-sm sm:gap-4 sm:rounded-4xl sm:p-4 dark:border-slate-700"
         >
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
               type="url"
               required
               placeholder="Wklej długi link, aby go skrócić..."
-              className="h-14 flex-1 rounded-full border border-slate-200 bg-white px-6 text-base outline-none transition focus:border-primary dark:border-slate-700 dark:bg-slate-900"
+              autoComplete="url"
+              autoCorrect="off"
+              spellCheck={false}
+              className="h-12 flex-1 rounded-full border border-slate-200 bg-white px-5 text-base outline-none transition focus:border-primary sm:h-14 sm:px-6 dark:border-slate-700 dark:bg-slate-900"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
             />
             <button
               type="submit"
               disabled={isLoading}
-              className="h-14 rounded-full bg-primary px-8 text-lg font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70"
+              className="h-12 w-full rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 sm:h-14 sm:w-auto sm:px-8 sm:text-lg"
             >
               {isLoading ? "Skracam..." : "Skróć link"}
             </button>
@@ -157,7 +196,7 @@ export default function HomePage() {
 
         {result ? (
           <section className="grid w-full max-w-4xl gap-4 md:grid-cols-[1.2fr_1fr]">
-            <div className="rounded-3xl border border-slate-200 bg-surface p-6 text-left shadow-sm dark:border-slate-700">
+            <div className="rounded-3xl border border-slate-200 bg-surface p-4 text-left shadow-sm sm:p-6 dark:border-slate-700">
               <h2 className="mb-4 text-xl font-bold">Short link</h2>
               <div className="space-y-3 text-sm">
                 <p className="break-all">
@@ -196,7 +235,7 @@ export default function HomePage() {
               </button>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-surface p-6 shadow-sm dark:border-slate-700">
+            <div className="rounded-3xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-6 dark:border-slate-700">
               <h2 className="mb-4 text-xl font-bold">QR code</h2>
               <Image
                 src={`/api/qr/${result.code}`}
@@ -204,7 +243,7 @@ export default function HomePage() {
                 width={224}
                 height={224}
                 unoptimized
-                className="mx-auto rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-700"
+                className="mx-auto h-auto w-full max-w-56 rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-700"
               />
               <a
                 href={`/api/qr/${result.code}?format=jpg&download=1`}
@@ -218,7 +257,7 @@ export default function HomePage() {
         ) : null}
 
         {stats && formattedStats ? (
-          <section className="w-full max-w-4xl rounded-3xl border border-slate-200 bg-surface p-6 text-left shadow-sm dark:border-slate-700">
+          <section className="w-full max-w-4xl rounded-3xl border border-slate-200 bg-surface p-4 text-left shadow-sm sm:p-6 dark:border-slate-700">
             <h2 className="mb-4 text-xl font-bold">Statistics</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <p>
