@@ -157,7 +157,7 @@ export default function HomePage() {
           onSubmit={onSubmit}
           className="flex w-full max-w-3xl flex-col gap-3 rounded-3xl border border-slate-200 bg-surface p-3 shadow-sm sm:gap-4 sm:rounded-4xl sm:p-4 dark:border-slate-700"
         >
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="flex flex-col gap-3 md:flex-row">
             <input
               type="url"
               required
@@ -165,14 +165,14 @@ export default function HomePage() {
               autoComplete="url"
               autoCorrect="off"
               spellCheck={false}
-              className="h-12 flex-1 rounded-full border border-slate-200 bg-white px-5 text-base outline-none transition focus:border-primary sm:h-14 sm:px-6 dark:border-slate-700 dark:bg-slate-900"
+              className="h-12 min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-5 text-base outline-none transition focus:border-primary sm:h-14 sm:px-6 dark:border-slate-700 dark:bg-slate-900"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
             />
             <button
               type="submit"
               disabled={isLoading}
-              className="h-12 w-full rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 sm:h-14 sm:w-auto sm:px-8 sm:text-lg"
+              className="h-12 w-full rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 md:h-14 md:w-auto md:px-8 md:text-lg"
             >
               {isLoading ? "Skracam..." : "Skróć link"}
             </button>
