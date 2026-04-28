@@ -27,6 +27,16 @@ type LinkStats = LinkRecord & {
   recentEvents: LinkEvent[];
 };
 
+type HistoryRecord = {
+  publicId: string;
+  code: string;
+  url: string;
+  createdAt: string;
+  lastAccessedAt: string | null;
+  totalClicks: number;
+  qrScans: number;
+};
+
 interface StorageEngine {
   createShortLink(url: string): Promise<LinkRecord>;
   getByCode(code: string): Promise<LinkRecord | null>;
@@ -34,6 +44,7 @@ interface StorageEngine {
   recordRedirect(code: string, event: Omit<LinkEvent, "createdAt">): Promise<void>;
   getStats(code: string): Promise<LinkStats | null>;
   getStatsByPublicId(publicId: string): Promise<LinkStats | null>;
+  listHistory(limit: number): Promise<HistoryRecord[]>;
 }
 
 const createCode = customAlphabet(
@@ -96,6 +107,16 @@ class SqliteStorage implements StorageEngine {
       );
 
       CREATE INDEX IF NOT EXISTS idx_events_code_created ON events (code, created_at DESC);
+
+      CREATE TABLE IF NOT EXISTS link_public_ids (
+        public_id TEXT PRIMARY KEY,
+        code TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(code) REFERENCES links(code)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_link_public_ids_code ON link_public_ids (code);
+      CREATE INDEX IF NOT EXISTS idx_link_public_ids_created ON link_public_ids (created_at DESC);
     `);
 
     const columns = this.db
@@ -107,6 +128,7 @@ class SqliteStorage implements StorageEngine {
     }
 
     this.db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_links_public_id ON links (public_id)");
+    this.db.exec("CREATE INDEX IF NOT EXISTS idx_links_url ON links (url)");
 
     const linksMissingPublicId = this.db
       .prepare("SELECT code FROM links WHERE public_id IS NULL OR public_id = ''")
@@ -120,24 +142,25 @@ class SqliteStorage implements StorageEngine {
       });
       tx(linksMissingPublicId);
     }
+
+    this.db.exec(`
+      INSERT OR IGNORE INTO link_public_ids (public_id, code, created_at)
+      SELECT public_id, code, created_at
+      FROM links
+      WHERE public_id IS NOT NULL AND public_id != ''
+    `);
   }
 
   async createShortLink(url: string): Promise<LinkRecord> {
-    for (let attempt = 0; attempt < 8; attempt++) {
-      const code = createCode();
-      const publicId = randomUUID();
-      const now = new Date().toISOString();
-      try {
-        this.db
-          .prepare(
-            "INSERT INTO links (code, public_id, url, created_at, total_clicks, qr_scans) VALUES (?, ?, ?, ?, 0, 0)",
-          )
-          .run(code, publicId, url, now);
-        const row = this.db
-          .prepare(
-            "SELECT code, public_id, url, created_at, last_accessed_at, total_clicks, qr_scans FROM links WHERE code = ?",
-          )
-          .get(code) as {
+    const now = new Date().toISOString();
+    const publicId = randomUUID();
+
+    const existing = this.db
+      .prepare(
+        "SELECT code, public_id, url, created_at, last_accessed_at, total_clicks, qr_scans FROM links WHERE url = ? ORDER BY created_at ASC LIMIT 1",
+      )
+      .get(url) as
+      | {
           code: string;
           public_id: string;
           url: string;
@@ -145,13 +168,54 @@ class SqliteStorage implements StorageEngine {
           last_accessed_at: string | null;
           total_clicks: number;
           qr_scans: number;
-        };
-        return normalizeRow(row);
-      } catch {
-        continue;
+        }
+      | undefined;
+
+    let row = existing;
+    if (!row) {
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const code = createCode();
+        const canonicalPublicId = randomUUID();
+        try {
+          this.db
+            .prepare(
+              "INSERT INTO links (code, public_id, url, created_at, total_clicks, qr_scans) VALUES (?, ?, ?, ?, 0, 0)",
+            )
+            .run(code, canonicalPublicId, url, now);
+          row = this.db
+            .prepare(
+              "SELECT code, public_id, url, created_at, last_accessed_at, total_clicks, qr_scans FROM links WHERE code = ?",
+            )
+            .get(code) as {
+            code: string;
+            public_id: string;
+            url: string;
+            created_at: string;
+            last_accessed_at: string | null;
+            total_clicks: number;
+            qr_scans: number;
+          };
+          break;
+        } catch {
+          continue;
+        }
       }
     }
-    throw new Error("Unable to generate unique short code.");
+
+    if (!row) {
+      throw new Error("Unable to generate unique short code.");
+    }
+
+    this.db
+      .prepare("INSERT INTO link_public_ids (public_id, code, created_at) VALUES (?, ?, ?)")
+      .run(publicId, row.code, now);
+
+    const normalized = normalizeRow(row);
+    return {
+      ...normalized,
+      publicId,
+      createdAt: now,
+    };
   }
 
   async getByCode(code: string): Promise<LinkRecord | null> {
@@ -177,6 +241,21 @@ class SqliteStorage implements StorageEngine {
   }
 
   async getByPublicId(publicId: string): Promise<LinkRecord | null> {
+    const mapping = this.db
+      .prepare("SELECT code, created_at FROM link_public_ids WHERE public_id = ?")
+      .get(publicId) as { code: string; created_at: string } | undefined;
+    if (mapping) {
+      const link = await this.getByCode(mapping.code);
+      if (!link) {
+        return null;
+      }
+      return {
+        ...link,
+        publicId,
+        createdAt: mapping.created_at,
+      };
+    }
+
     const row = this.db
       .prepare(
         "SELECT code, public_id, url, created_at, last_accessed_at, total_clicks, qr_scans FROM links WHERE public_id = ?",
@@ -248,7 +327,54 @@ class SqliteStorage implements StorageEngine {
     if (!link) {
       return null;
     }
-    return this.getStats(link.code);
+    const stats = await this.getStats(link.code);
+    if (!stats) {
+      return null;
+    }
+    return {
+      ...stats,
+      publicId,
+      createdAt: link.createdAt,
+    };
+  }
+
+  async listHistory(limit: number): Promise<HistoryRecord[]> {
+    const rows = this.db
+      .prepare(
+        `
+          SELECT
+            h.public_id,
+            h.code,
+            l.url,
+            h.created_at,
+            l.last_accessed_at,
+            l.total_clicks,
+            l.qr_scans
+          FROM link_public_ids h
+          INNER JOIN links l ON l.code = h.code
+          ORDER BY h.created_at DESC
+          LIMIT ?
+        `,
+      )
+      .all(Math.max(1, Math.min(limit, 200))) as {
+      public_id: string;
+      code: string;
+      url: string;
+      created_at: string;
+      last_accessed_at: string | null;
+      total_clicks: number;
+      qr_scans: number;
+    }[];
+
+    return rows.map((row) => ({
+      publicId: row.public_id,
+      code: row.code,
+      url: row.url,
+      createdAt: row.created_at,
+      lastAccessedAt: row.last_accessed_at,
+      totalClicks: Number(row.total_clicks ?? 0),
+      qrScans: Number(row.qr_scans ?? 0),
+    }));
   }
 }
 
@@ -271,37 +397,67 @@ class RedisStorage implements StorageEngine {
     return `qr:public:${publicId}`;
   }
 
+  private publicMetaKey(publicId: string): string {
+    return `qr:public-meta:${publicId}`;
+  }
+
+  private urlKey(url: string): string {
+    const encoded = Buffer.from(url).toString("base64url");
+    return `qr:url:${encoded}`;
+  }
+
+  private historyKey(): string {
+    return "qr:history";
+  }
+
   async createShortLink(url: string): Promise<LinkRecord> {
-    for (let attempt = 0; attempt < 8; attempt++) {
-      const code = createCode();
-      const publicId = randomUUID();
-      const key = this.linkKey(code);
-      const exists = await this.redis.exists(key);
-      if (exists) {
-        continue;
+    const now = new Date().toISOString();
+    const publicId = randomUUID();
+
+    let code = await this.redis.get<string>(this.urlKey(url));
+    if (!code) {
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const candidate = createCode();
+        const key = this.linkKey(candidate);
+        const exists = await this.redis.exists(key);
+        if (exists) {
+          continue;
+        }
+
+        await this.redis.hset(key, {
+          code: candidate,
+          publicId: randomUUID(),
+          url,
+          createdAt: now,
+          lastAccessedAt: "",
+          totalClicks: "0",
+          qrScans: "0",
+        });
+        await this.redis.set(this.urlKey(url), candidate);
+        code = candidate;
+        break;
       }
-      const now = new Date().toISOString();
-      await this.redis.hset(key, {
-        code,
-        publicId,
-        url,
-        createdAt: now,
-        lastAccessedAt: "",
-        totalClicks: "0",
-        qrScans: "0",
-      });
-      await this.redis.set(this.publicIdKey(publicId), code);
-      return {
-        code,
-        publicId,
-        url,
-        createdAt: now,
-        lastAccessedAt: null,
-        totalClicks: 0,
-        qrScans: 0,
-      };
     }
-    throw new Error("Unable to generate unique short code.");
+
+    if (!code) {
+      throw new Error("Unable to generate unique short code.");
+    }
+
+    await this.redis.set(this.publicIdKey(publicId), code);
+    await this.redis.set(this.publicMetaKey(publicId), now);
+    await this.redis.lpush(this.historyKey(), publicId);
+    await this.redis.ltrim(this.historyKey(), 0, 499);
+
+    const link = await this.getByCode(code);
+    if (!link) {
+      throw new Error("Unable to load created link.");
+    }
+
+    return {
+      ...link,
+      publicId,
+      createdAt: now,
+    };
   }
 
   async getByCode(code: string): Promise<LinkRecord | null> {
@@ -332,7 +488,16 @@ class RedisStorage implements StorageEngine {
     if (!code) {
       return null;
     }
-    return this.getByCode(code);
+    const link = await this.getByCode(code);
+    if (!link) {
+      return null;
+    }
+    const createdAt = await this.redis.get<string>(this.publicMetaKey(publicId));
+    return {
+      ...link,
+      publicId,
+      createdAt: createdAt ?? link.createdAt,
+    };
   }
 
   async recordRedirect(code: string, event: Omit<LinkEvent, "createdAt">): Promise<void> {
@@ -381,7 +546,33 @@ class RedisStorage implements StorageEngine {
     if (!link) {
       return null;
     }
-    return this.getStats(link.code);
+    const stats = await this.getStats(link.code);
+    if (!stats) {
+      return null;
+    }
+    return {
+      ...stats,
+      publicId,
+      createdAt: link.createdAt,
+    };
+  }
+
+  async listHistory(limit: number): Promise<HistoryRecord[]> {
+    const boundedLimit = Math.max(1, Math.min(limit, 200));
+    const publicIds = await this.redis.lrange<string>(this.historyKey(), 0, boundedLimit - 1);
+    const records = await Promise.all(publicIds.map((publicId) => this.getByPublicId(publicId)));
+
+    return records
+      .filter((record): record is LinkRecord => record !== null)
+      .map((record) => ({
+        publicId: record.publicId,
+        code: record.code,
+        url: record.url,
+        createdAt: record.createdAt,
+        lastAccessedAt: record.lastAccessedAt,
+        totalClicks: record.totalClicks,
+        qrScans: record.qrScans,
+      }));
   }
 }
 
@@ -391,4 +582,4 @@ const storage: StorageEngine =
     : new SqliteStorage();
 
 export { storage };
-export type { LinkRecord, LinkStats };
+export type { HistoryRecord, LinkRecord, LinkStats };

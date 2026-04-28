@@ -15,12 +15,15 @@ export async function GET(
 
   const baseUrl = await getBaseUrl();
   return NextResponse.json({
+    code: stats.code,
     publicId: stats.publicId,
     url: stats.url,
     createdAt: stats.createdAt,
     lastAccessedAt: stats.lastAccessedAt,
     totalClicks: stats.totalClicks,
     qrScans: stats.qrScans,
-    shortUrl: `${baseUrl}/stats/${stats.publicId}`,
+    shortUrl: `${baseUrl}/${stats.code}`,
+    statsUrl: `${baseUrl}/stats/${stats.publicId}`,
+    qrUrl: `${baseUrl}/api/qr/${stats.code}`,
   });
 }

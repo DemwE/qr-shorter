@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 
 type ApiResult = {
   code: string;
@@ -26,12 +27,6 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastStatsUrl, setLastStatsUrl] = useState<string | null>(() => {
-    if (typeof window === "undefined") {
-      return null;
-    }
-    return localStorage.getItem("lastStatsUrl");
-  });
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") {
       return "light";
@@ -102,8 +97,6 @@ export default function HomePage() {
 
       const nextResult = payload as ApiResult;
       setResult(nextResult);
-      setLastStatsUrl(nextResult.statsUrl);
-      localStorage.setItem("lastStatsUrl", nextResult.statsUrl);
       setUrl("");
       await loadStats(nextResult.publicId);
     } catch (err) {
@@ -118,16 +111,11 @@ export default function HomePage() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6 sm:py-8">
         <div className="text-3xl font-extrabold text-primary sm:text-4xl">QR Shorter</div>
         <div className="flex items-center gap-2 sm:gap-3">
-          <a
-            href={lastStatsUrl ?? "#"}
-            aria-label="Open last stats"
-            title={lastStatsUrl ? "Open last stats" : "No history yet"}
-            onClick={(event) => {
-              if (!lastStatsUrl) {
-                event.preventDefault();
-              }
-            }}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          <Link
+            href="/history"
+            aria-label="Open history"
+            title="Open history"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-primary/35 bg-primary/10 text-primary transition hover:bg-primary/20 dark:border-primary/45"
           >
             <svg
               viewBox="0 0 24 24"
@@ -143,7 +131,7 @@ export default function HomePage() {
               <path d="M3 3v6h6" />
               <path d="M12 7v5l3 3" />
             </svg>
-          </a>
+          </Link>
           <button
             type="button"
             onClick={toggleTheme}
