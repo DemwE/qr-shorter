@@ -25,6 +25,20 @@ export default function HistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedPublicId, setCopiedPublicId] = useState<string | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") {
+      return "light";
+    }
+    const preferred =
+      localStorage.getItem("theme") ??
+      (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    return preferred === "dark" ? "dark" : "light";
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const load = async () => {
@@ -47,6 +61,10 @@ export default function HistoryPage() {
     void load();
   }, []);
 
+  const toggleTheme = () => {
+    setTheme((current) => (current === "light" ? "dark" : "light"));
+  };
+
   const hasItems = useMemo(() => items.length > 0, [items]);
 
   const copyShortUrl = async (publicId: string, shortUrl: string) => {
@@ -62,15 +80,26 @@ export default function HistoryPage() {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-primary sm:text-3xl">Historia skróconych linków</h1>
-        <Link
-          href="/"
-          className="rounded-full border border-primary/35 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/20"
-        >
-          Nowy link
+    <main className="mx-auto flex min-h-full w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6">
+      <header className="flex items-center justify-between gap-3">
+        <Link href="/" className="text-3xl font-extrabold text-primary sm:text-4xl">
+          QR Shorter
         </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/"
+            className="rounded-full border border-primary/35 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/20"
+          >
+            Nowy link
+          </Link>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+          >
+            Switch theme
+          </button>
+        </div>
       </header>
 
       {error ? <p className="rounded-2xl bg-red-500/10 p-3 text-sm text-red-500">{error}</p> : null}

@@ -107,7 +107,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-full bg-background text-foreground">
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6 sm:py-8">
         <div className="text-3xl font-extrabold text-primary sm:text-4xl">QR Shorter</div>
         <div className="flex items-center gap-2 sm:gap-3">
