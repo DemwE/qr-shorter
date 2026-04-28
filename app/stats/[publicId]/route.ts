@@ -11,10 +11,10 @@ function getClientIp(request: Request): string | null {
 
 export async function GET(
   request: Request,
-  context: { params: Promise<{ code: string }> },
+  context: { params: Promise<{ publicId: string }> },
 ) {
-  const { code } = await context.params;
-  const link = await storage.getByCode(code);
+  const { publicId } = await context.params;
+  const link = await storage.getByPublicId(publicId);
 
   if (!link) {
     return NextResponse.redirect(new URL("/", request.url), { status: 302 });
@@ -23,7 +23,7 @@ export async function GET(
   const url = new URL(request.url);
   const isQrScan = url.searchParams.get("src") === "qr";
 
-  await storage.recordRedirect(code, {
+  await storage.recordRedirect(link.code, {
     type: isQrScan ? "qr_scan" : "redirect",
     ip: getClientIp(request),
     userAgent: request.headers.get("user-agent"),

@@ -31,10 +31,11 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         code: created.code,
+        publicId: created.publicId,
         url: created.url,
         shortUrl: `${baseUrl}/${created.code}`,
         qrUrl: `${baseUrl}/api/qr/${created.code}`,
-        statsUrl: `${baseUrl}/api/stats/${created.code}`,
+        statsUrl: `${baseUrl}/stats/${created.publicId}`,
       },
       { status: 201 },
     );

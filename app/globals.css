@@ -6,7 +6,7 @@
   --surface: #ffffff;
   --foreground: #0f172a;
   --muted: #475569;
-  --primary: #2563eb;
+  --primary: #25af74;
 }
 
 @theme inline {
@@ -22,7 +22,7 @@
   --surface: #0f172a;
   --foreground: #e2e8f0;
   --muted: #94a3b8;
-  --primary: #3b82f6;
+  --primary: #25af74;
 }
 
 body {

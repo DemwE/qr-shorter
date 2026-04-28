@@ -5,6 +5,7 @@ import Image from "next/image";
 
 type ApiResult = {
   code: string;
+  publicId: string;
   url: string;
   shortUrl: string;
   qrUrl: string;
@@ -12,7 +13,7 @@ type ApiResult = {
 };
 
 type StatsResult = {
-  code: string;
+  publicId: string;
   url: string;
   createdAt: string;
   lastAccessedAt: string | null;
@@ -59,10 +60,10 @@ export default function HomePage() {
     setTheme(next);
   };
 
-  const loadStats = async (code: string) => {
+  const loadStats = async (publicId: string) => {
     setIsLoadingStats(true);
     try {
-      const response = await fetch(`/api/stats/${code}`, { cache: "no-store" });
+      const response = await fetch(`/api/public-stats/${publicId}`, { cache: "no-store" });
       if (!response.ok) {
         throw new Error("Failed to load statistics.");
       }
@@ -96,7 +97,7 @@ export default function HomePage() {
       const nextResult = payload as ApiResult;
       setResult(nextResult);
       setUrl("");
-      await loadStats(nextResult.code);
+      await loadStats(nextResult.publicId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
@@ -113,7 +114,7 @@ export default function HomePage() {
           onClick={toggleTheme}
           className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
         >
-          {theme === "light" ? "Dark mode" : "Light mode"}
+          Switch theme
         </button>
       </header>
 
@@ -173,13 +174,21 @@ export default function HomePage() {
                     {result.shortUrl}
                   </a>
                 </p>
-                <p className="text-muted">
-                  QR scans are tracked with <code>?src=qr</code>.
+                <p className="break-all">
+                  <span className="font-semibold">Stats (do not share public):</span>{" "}
+                  <a
+                    href={result.statsUrl}
+                    className="text-primary underline"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {result.statsUrl}
+                  </a>
                 </p>
               </div>
               <button
                 type="button"
-                onClick={() => loadStats(result.code)}
+                onClick={() => loadStats(result.publicId)}
                 disabled={isLoadingStats}
                 className="mt-6 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold transition hover:bg-slate-100 disabled:opacity-70 dark:border-slate-600 dark:hover:bg-slate-800"
               >
@@ -197,6 +206,13 @@ export default function HomePage() {
                 unoptimized
                 className="mx-auto rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-700"
               />
+              <a
+                href={`/api/qr/${result.code}?format=jpg&download=1`}
+                download={`qr-${result.code}.jpg`}
+                className="mt-4 inline-flex rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold transition hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800"
+              >
+                Download QR (JPG)
+              </a>
             </div>
           </section>
         ) : null}

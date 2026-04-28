@@ -4,7 +4,7 @@ import { getBaseUrl } from "@/lib/base-url";
 import { storage } from "@/lib/storage";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ code: string }> },
 ) {
   const { code } = await context.params;
@@ -14,7 +14,36 @@ export async function GET(
   }
 
   const baseUrl = await getBaseUrl();
-  const qrDestination = `${baseUrl}/${code}?src=qr`;
+  const qrDestination = `${baseUrl}/stats/${link.publicId}?src=qr`;
+  const requestUrl = new URL(request.url);
+  const format = requestUrl.searchParams.get("format") === "jpg" ? "jpg" : "svg";
+  const shouldDownload = requestUrl.searchParams.get("download") === "1";
+
+  if (format === "jpg") {
+    const jpgDataUrl = await QRCode.toDataURL(qrDestination, {
+      type: "image/jpeg",
+      width: 640,
+      margin: 1,
+      color: {
+        dark: "#1d4ed8",
+        light: "#ffffff",
+      },
+    });
+    const base64 = jpgDataUrl.split(",")[1] ?? "";
+    const jpgBuffer = Buffer.from(base64, "base64");
+
+    return new NextResponse(jpgBuffer, {
+      status: 200,
+      headers: {
+        "Content-Type": "image/jpeg",
+        "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+        ...(shouldDownload
+          ? { "Content-Disposition": `attachment; filename="qr-${code}.jpg"` }
+          : {}),
+      },
+    });
+  }
+
   const svg = await QRCode.toString(qrDestination, {
     type: "svg",
     width: 320,
@@ -30,6 +59,9 @@ export async function GET(
     headers: {
       "Content-Type": "image/svg+xml; charset=utf-8",
       "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400",
+      ...(shouldDownload
+        ? { "Content-Disposition": `attachment; filename="qr-${code}.svg"` }
+        : {}),
     },
   });
 }

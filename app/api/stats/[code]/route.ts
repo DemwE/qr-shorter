@@ -17,6 +17,7 @@ export async function GET(
   return NextResponse.json({
     ...stats,
     shortUrl: `${baseUrl}/${stats.code}`,
+    statsUrl: `${baseUrl}/stats/${stats.publicId}`,
     qrUrl: `${baseUrl}/api/qr/${stats.code}`,
   });
 }
