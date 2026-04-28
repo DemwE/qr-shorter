@@ -98,6 +98,26 @@ export default function HomePage() {
       const nextResult = payload as ApiResult;
       setResult(nextResult);
       setUrl("");
+      
+      // Save to device history
+      try {
+        const historyItem = {
+          publicId: nextResult.publicId,
+          code: nextResult.code,
+          url: nextResult.url,
+          createdAt: new Date().toISOString(),
+          shortUrl: nextResult.shortUrl,
+          statsUrl: nextResult.statsUrl,
+          qrDownloadUrl: `${nextResult.qrUrl}?format=jpg&download=1`,
+        };
+        const stored = localStorage.getItem("qr-history");
+        const history = stored ? JSON.parse(stored) : [];
+        const updated = [historyItem, ...history].slice(0, 100);
+        localStorage.setItem("qr-history", JSON.stringify(updated));
+      } catch {
+        // Silent fail for localStorage
+      }
+      
       await loadStats(nextResult.publicId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");

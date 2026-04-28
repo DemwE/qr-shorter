@@ -8,21 +8,23 @@ type HistoryItem = {
   code: string;
   url: string;
   createdAt: string;
-  lastAccessedAt: string | null;
-  totalClicks: number;
-  qrScans: number;
   shortUrl: string;
   statsUrl: string;
   qrDownloadUrl: string;
 };
 
-type HistoryResponse = {
-  items: HistoryItem[];
-};
-
 export default function HistoryPage() {
-  const [items, setItems] = useState<HistoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items] = useState<HistoryItem[]>(() => {
+    if (typeof window === "undefined") {
+      return [];
+    }
+    try {
+      const stored = localStorage.getItem("qr-history");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
   const [error, setError] = useState<string | null>(null);
   const [copiedPublicId, setCopiedPublicId] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
@@ -39,27 +41,6 @@ export default function HistoryPage() {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
   }, [theme]);
-
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch("/api/history?limit=50", { cache: "no-store" });
-        if (!response.ok) {
-          throw new Error("Nie udało się pobrać historii.");
-        }
-        const payload = (await response.json()) as HistoryResponse;
-        setItems(payload.items);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Błąd pobierania historii.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void load();
-  }, []);
 
   const toggleTheme = () => {
     setTheme((current) => (current === "light" ? "dark" : "light"));
@@ -129,9 +110,7 @@ export default function HistoryPage() {
 
         {error ? <p className="w-full rounded-2xl bg-red-500/10 p-3 text-left text-sm text-red-500">{error}</p> : null}
 
-        {isLoading ? <p className="w-full text-sm text-muted">Ładowanie historii...</p> : null}
-
-        {!isLoading && !hasItems ? (
+        {!hasItems ? (
           <section className="w-full rounded-3xl border border-slate-200 bg-surface p-6 text-sm text-muted shadow-sm dark:border-slate-700">
             Brak historii. Utwórz pierwszy krótki link na stronie głównej.
           </section>
@@ -152,7 +131,7 @@ export default function HistoryPage() {
                     </p>
                     <p className="text-xs text-muted">Utworzono: {new Date(item.createdAt).toLocaleString()}</p>
                     <p className="text-xs text-muted">
-                      Kliknięcia: {item.totalClicks} • QR: {item.qrScans}
+                      Utworzono: {new Date(item.createdAt).toLocaleString()}
                     </p>
                   </div>
 
