@@ -1,8 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/base-url";
 import { storage } from "@/lib/storage";
+import SiteHeader from "@/app/components/site-header";
 
 export const dynamic = "force-dynamic";
 
@@ -25,15 +25,16 @@ export default async function StatsDetailsPage({
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-4xl flex-col gap-6 px-4 py-8 sm:px-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-extrabold text-primary sm:text-3xl">Szczegóły linku</h1>
-        <Link
-          href="/history"
-          className="rounded-full border border-primary/35 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/20"
-        >
-          Historia
-        </Link>
-      </header>
+      <SiteHeader />
+
+      <section className="space-y-4 text-center">
+        <h1 className="text-4xl font-extrabold leading-tight sm:text-6xl">
+          <span className="text-primary">Szczegóły</span> linku
+        </h1>
+        <p className="mx-auto max-w-3xl text-base leading-7 text-muted sm:text-lg sm:leading-9">
+          Otwórz dane linku, QR kod i statystyki w tym samym układzie co na stronie głównej.
+        </p>
+      </section>
 
       <section className="grid gap-4 md:grid-cols-[1.2fr_1fr]">
         <div className="rounded-3xl border border-slate-200 bg-surface p-4 text-left shadow-sm sm:p-6 dark:border-slate-700">

@@ -25,7 +25,7 @@ export async function GET(
       width: 640,
       margin: 1,
       color: {
-        dark: "#1d4ed8",
+        dark: "#000000",
         light: "#ffffff",
       },
     });
@@ -49,7 +49,7 @@ export async function GET(
     width: 320,
     margin: 1,
     color: {
-      dark: "#1d4ed8",
+      dark: "#000000",
       light: "#ffffff",
     },
   });

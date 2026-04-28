@@ -165,7 +165,7 @@ export default function HomePage() {
               autoComplete="url"
               autoCorrect="off"
               spellCheck={false}
-              className="h-12 min-w-0 flex-1 rounded-full border border-slate-200 bg-white px-5 text-base outline-none transition focus:border-primary sm:h-14 sm:px-6 dark:border-slate-700 dark:bg-slate-900"
+              className="min-h-12 min-w-0 flex-1 rounded-full border border-slate-200 bg-white p-5 text-base outline-none transition focus:border-primary sm:min-h-14 sm:px-6 dark:border-slate-700 dark:bg-slate-900"
               value={url}
               onChange={(event) => setUrl(event.target.value)}
             />

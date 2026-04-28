@@ -175,7 +175,7 @@ export default function HistoryPage() {
                       download={`qr-${item.code}.jpg`}
                       className="rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white transition hover:opacity-90"
                     >
-                      Download
+                      Get QR
                     </a>
                   </div>
                 </div>
