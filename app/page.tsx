@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import {FormEvent, useEffect, useMemo, useState} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import CopyableLinkRow from "@/app/components/copyable-link-row";
@@ -82,7 +82,7 @@ export default function HomePage() {
   const loadStats = async (publicId: string) => {
     setIsLoadingStats(true);
     try {
-      const response = await fetch(`/api/public-stats/${publicId}`, { cache: "no-store" });
+      const response = await fetch(`/api/public-stats/${publicId}`, {cache: "no-store"});
       if (!response.ok) {
         throw new Error("Failed to load statistics.");
       }
@@ -105,8 +105,8 @@ export default function HomePage() {
     try {
       const response = await fetch("/api/shorten", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({url}),
       });
       const payload = await response.json();
 
@@ -125,7 +125,7 @@ export default function HomePage() {
       const nextResult = payload as ApiResult;
       setResult(nextResult);
       setUrl("");
-      
+
       // Save to device history
       try {
         const historyItem = {
@@ -144,7 +144,7 @@ export default function HomePage() {
       } catch {
         // Silent fail for localStorage
       }
-      
+
       await loadStats(nextResult.publicId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Coś poszło nie tak.");
@@ -174,9 +174,9 @@ export default function HomePage() {
               className="h-5 w-5"
               aria-hidden="true"
             >
-              <path d="M3 12a9 9 0 1 0 3-6.7" />
-              <path d="M3 3v6h6" />
-              <path d="M12 7v5l3 3" />
+              <path d="M3 12a9 9 0 1 0 3-6.7"/>
+              <path d="M3 3v6h6"/>
+              <path d="M12 7v5l3 3"/>
             </svg>
           </Link>
           <button
@@ -189,7 +189,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="mx-auto flex w-full max-w-4xl flex-col items-center gap-8 px-4 pb-16 pt-4 text-center sm:gap-10 sm:px-6 sm:pb-20 sm:pt-8">
+      <main
+        className="mx-auto flex w-full max-w-4xl flex-col items-center gap-8 px-4 pb-16 pt-4 text-center sm:gap-10 sm:px-6 sm:pb-20 sm:pt-8">
         <div className="space-y-4 sm:space-y-6">
           <h1 className="text-4xl font-extrabold leading-tight sm:text-6xl">
             <span className="text-primary">Skracaj</span>, licz,{" "}
@@ -199,38 +200,50 @@ export default function HomePage() {
             Shorten long URLs, generate QR codes, and measure clicks and scans from one place.
           </p>
         </div>
-
-        <form
-          onSubmit={onSubmit}
-          className="relative flex w-full max-w-3xl flex-col gap-3 rounded-3xl border border-slate-200 bg-surface p-3 pb-10 shadow-sm sm:gap-4 sm:rounded-4xl sm:p-4 sm:pb-12 dark:border-slate-700"
-        >
-          <div className="flex flex-col gap-3 md:flex-row md:gap-2">
-            <input
-              type="url"
-              required
-              placeholder="Wklej długi link, aby go skrócić..."
-              autoComplete="url"
-              autoCorrect="off"
-              spellCheck={false}
-              className="min-h-12 min-w-0 flex-1 rounded-full border border-slate-200 bg-white p-5 text-base outline-none transition focus:border-primary sm:min-h-14 sm:px-6 dark:border-slate-700 dark:bg-slate-900"
-              value={url}
-              onChange={(event) => setUrl(event.target.value)}
-            />
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="h-12 rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 sm:h-auto sm:px-8 sm:text-lg md:h-14 md:px-6 md:text-base cursor-pointer"
-            >
-              {isLoading ? "Skracam..." : "Skróć link"}
-            </button>
-          </div>
-          <div className="absolute left-1/2 bottom-0 z-10 -translate-x-1/2 translate-y-1/2">
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-500 dark:text-white dark:hover:bg-slate-600 cursor-pointer"
-            >
-              Inne funkcje
-              <svg
+        <div className="flex flex-col items-center w-full">
+          <form
+            onSubmit={onSubmit}
+            className="flex w-full max-w-3xl flex-col gap-3 rounded-3xl border border-slate-200 bg-surface p-3 pb-10 sm:gap-4 sm:rounded-4xl sm:p-4 dark:border-slate-700"
+          >
+            <div className="flex flex-col items-center gap-3 md:flex-row md:gap-2">
+              <input
+                type="url"
+                required
+                placeholder="Wklej długi link, aby go skrócić..."
+                autoComplete="url"
+                autoCorrect="off"
+                spellCheck={false}
+                className="min-h-12 min-w-0 flex-1 rounded-full border border-slate-200 bg-white p-5 text-base outline-none transition focus:border-primary sm:min-h-14 sm:px-6 dark:border-slate-700 dark:bg-slate-900"
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+              />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="h-12 rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 sm:h-auto sm:px-8 sm:text-lg md:h-14 md:px-6 md:text-base cursor-pointer"
+              >
+                {isLoading ? "Skracam..." : "Skróć link"}
+              </button>
+            </div>
+            {error ? (
+              <p className="text-left text-sm font-medium text-red-500">
+                {retryAfter
+                  ? `Error: Przekroczono limit. Spróbuj ponownie za ${retryAfter >= 60 ? `${Math.floor(retryAfter / 60)}m` : `${retryAfter}s`}.`
+                  : error}
+              </p>
+            ) : null}
+            <div className="hidden">hello</div>
+          </form>
+          <div className="grid w-full grid-cols-5">
+            <div className="flex justify-end z-2 col-span-2">
+              <div className="bg-surface -mt-px -mr-px w-[50%] h-[50%]">
+                <div className="bg-background rounded-tr-3xl border-r border-slate-200 border-t w-full h-full dark:border-slate-700"></div>
+              </div>
+            </div>
+            <div
+              className="z-1 -mt-px flex h-10 items-center justify-center rounded-b-3xl border border-t-0 border-slate-200 bg-white px-6 dark:border-slate-700 dark:bg-slate-900">
+              <button className="text-sm font-semibold flex items-center">
+                Inne funkcje <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -240,26 +253,26 @@ export default function HomePage() {
                 className="h-4 w-4"
                 aria-hidden="true"
               >
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
               </svg>
-            </button>
+              </button>
+            </div>
+            <div className="flex justify-start z-2 col-span-2">
+              <div className="bg-surface -mt-px -ml-px w-[50%] h-[50%]">
+                <div className="bg-background rounded-tl-3xl border-l border-slate-200 border-t w-full h-full dark:border-slate-700"></div>
+              </div>
+            </div>
           </div>
-          {error ? (
-            <p className="text-left text-sm font-medium text-red-500">
-              {retryAfter
-                ? `Error: Przekroczono limit. Spróbuj ponownie za ${retryAfter >= 60 ? `${Math.floor(retryAfter / 60)}m` : `${retryAfter}s`}.`
-                : error}
-            </p>
-          ) : null}
-        </form>
+        </div>
 
         {result ? (
           <section className="grid w-full max-w-4xl gap-4 md:grid-cols-[1.2fr_1fr]">
-            <div className="rounded-3xl border border-slate-200 bg-surface p-4 text-left shadow-sm sm:p-6 dark:border-slate-700">
+            <div
+              className="rounded-3xl border border-slate-200 bg-surface p-4 text-left sm:p-6 dark:border-slate-700">
               <h2 className="mb-4 text-xl font-bold">Short link</h2>
               <div className="space-y-3 text-sm">
-                <CopyableLinkRow label="Original:" value={result.url} copyLabel="original URL" />
+                <CopyableLinkRow label="Original:" value={result.url} copyLabel="original URL"/>
                 <CopyableLinkRow
                   label="Short:"
                   value={result.shortUrl}
@@ -283,7 +296,8 @@ export default function HomePage() {
               </button>
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-6 dark:border-slate-700">
+            <div
+              className="rounded-3xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-6 dark:border-slate-700">
               <h2 className="mb-4 text-xl font-bold">QR code</h2>
               <Image
                 src={`/api/qr/${result.code}`}
@@ -305,7 +319,8 @@ export default function HomePage() {
         ) : null}
 
         {stats && formattedStats ? (
-          <section className="w-full max-w-4xl rounded-3xl border border-slate-200 bg-surface p-4 text-left shadow-sm sm:p-6 dark:border-slate-700">
+          <section
+            className="w-full max-w-4xl rounded-3xl border border-slate-200 bg-surface p-4 text-left shadow-sm sm:p-6 dark:border-slate-700">
             <h2 className="mb-4 text-xl font-bold">Statistics</h2>
             <div className="grid gap-3 sm:grid-cols-2">
               <p>
