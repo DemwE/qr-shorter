@@ -49,7 +49,6 @@ export default async function StatsDetailsPage({
               copyLabel="krótki link"
             />
             <p className="break-all">
-              <span className="font-semibold">Stats ID:</span>{" "}
               <a href={statsUrl} className="text-primary underline" target="_blank" rel="noreferrer">
                 {statsUrl}
               </a>

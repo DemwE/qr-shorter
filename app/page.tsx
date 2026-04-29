@@ -166,7 +166,7 @@ export default function HomePage() {
       <main className="mx-auto flex w-full max-w-4xl flex-col items-center gap-8 px-4 pb-16 pt-4 text-center sm:gap-10 sm:px-6 sm:pb-20 sm:pt-8">
         <div className="space-y-4 sm:space-y-6">
           <h1 className="text-4xl font-extrabold leading-tight sm:text-6xl">
-            <span className="text-primary">Skracaj</span>, udostępniaj,{" "}
+            <span className="text-primary">Skracaj</span>, licz,{" "}
             <span className="text-primary">dziel się</span>
           </h1>
           <p className="mx-auto max-w-3xl text-base leading-7 text-muted sm:text-lg sm:leading-9">
@@ -178,7 +178,7 @@ export default function HomePage() {
           onSubmit={onSubmit}
           className="flex w-full max-w-3xl flex-col gap-3 rounded-3xl border border-slate-200 bg-surface p-3 shadow-sm sm:gap-4 sm:rounded-4xl sm:p-4 dark:border-slate-700"
         >
-          <div className="flex flex-col gap-3 md:flex-row">
+          <div className="flex flex-col items-center gap-3 md:flex-row">
             <input
               type="url"
               required
@@ -193,7 +193,7 @@ export default function HomePage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="h-12 w-full rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 md:h-14 md:w-auto md:px-8 md:text-lg"
+              className="h-12 w-full rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 md:h-14 md:w-auto md:px-8 md:text-lg cursor-pointer"
             >
               {isLoading ? "Skracam..." : "Skróć link"}
             </button>
@@ -201,6 +201,27 @@ export default function HomePage() {
           {error ? (
             <p className="text-left text-sm font-medium text-red-500">{error}</p>
           ) : null}
+          <div className="flex items-center justify-center gap-2">
+            <button
+              type="button"
+              className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-500 dark:text-white dark:hover:bg-slate-600 cursor-pointer"
+            >
+              Inne funkcje (wkrótce)
+              <svg 
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="h-4 w-4"
+                aria-hidden="true"
+              >
+                <line x1="5" y1="12" x2="19" y2="12" />
+                <polyline points="12 5 19 12 12 19" />
+              </svg>
+            </button>
+          </div>
         </form>
 
         {result ? (
