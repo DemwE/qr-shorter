@@ -21,6 +21,17 @@ URL shortener + QR code generator with redirect/QR statistics and light/dark mod
 If Redis variables are present, Redis is used automatically.  
 If not, SQLite is used.
 
+## Base URL on Vercel
+
+Generated short URLs and QR destinations use this priority:
+
+1. `NEXT_PUBLIC_BASE_URL` (recommended for custom domains)
+2. `VERCEL_PROJECT_PRODUCTION_URL`
+3. `VERCEL_URL`
+4. Request host headers / localhost fallback
+
+Setting `NEXT_PUBLIC_BASE_URL` helps avoid links pointing to temporary preview deployment URLs.
+
 ## Run locally
 
 ```bash
