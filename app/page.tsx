@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import CopyableLinkRow from "@/app/components/copyable-link-row";
 
 type ApiResult = {
   code: string;
@@ -207,31 +208,19 @@ export default function HomePage() {
             <div className="rounded-3xl border border-slate-200 bg-surface p-4 text-left shadow-sm sm:p-6 dark:border-slate-700">
               <h2 className="mb-4 text-xl font-bold">Short link</h2>
               <div className="space-y-3 text-sm">
-                <p className="break-all">
-                  <span className="font-semibold">Original:</span> {result.url}
-                </p>
-                <p className="break-all">
-                  <span className="font-semibold">Short:</span>{" "}
-                  <a
-                    href={result.shortUrl}
-                    className="text-primary underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {result.shortUrl}
-                  </a>
-                </p>
-                <p className="break-all">
-                  <span className="font-semibold">Stats (do not share public):</span>{" "}
-                  <a
-                    href={result.statsUrl}
-                    className="text-primary underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {result.statsUrl}
-                  </a>
-                </p>
+                <CopyableLinkRow label="Original:" value={result.url} copyLabel="original URL" />
+                <CopyableLinkRow
+                  label="Short:"
+                  value={result.shortUrl}
+                  href={result.shortUrl}
+                  copyLabel="short link"
+                />
+                <CopyableLinkRow
+                  label="Stats (do not share public):"
+                  value={result.statsUrl}
+                  href={result.statsUrl}
+                  copyLabel="stats URL"
+                />
               </div>
               <button
                 type="button"

@@ -14,7 +14,7 @@ export async function GET(
   }
 
   const baseUrl = await getBaseUrl();
-  const qrDestination = `${baseUrl}/stats/${link.publicId}?src=qr`;
+  const qrDestination = `${baseUrl}/${link.code}?src=qr`;
   const requestUrl = new URL(request.url);
   const format = requestUrl.searchParams.get("format") === "jpg" ? "jpg" : "svg";
   const shouldDownload = requestUrl.searchParams.get("download") === "1";

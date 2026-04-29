@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/base-url";
 import { storage } from "@/lib/storage";
 import SiteHeader from "@/app/components/site-header";
+import CopyableLinkRow from "@/app/components/copyable-link-row";
 
 export const dynamic = "force-dynamic";
 
@@ -40,15 +41,13 @@ export default async function StatsDetailsPage({
         <div className="rounded-3xl border border-slate-200 bg-surface p-4 text-left shadow-sm sm:p-6 dark:border-slate-700">
           <h2 className="mb-4 text-xl font-bold">Przekierowanie</h2>
           <div className="space-y-3 text-sm">
-            <p className="break-all">
-              <span className="font-semibold">Oryginalny URL:</span> {stats.url}
-            </p>
-            <p className="break-all">
-              <span className="font-semibold">Krótki link:</span>{" "}
-              <a href={shortUrl} className="text-primary underline" target="_blank" rel="noreferrer">
-                {shortUrl}
-              </a>
-            </p>
+            <CopyableLinkRow label="Oryginalny URL:" value={stats.url} copyLabel="oryginalny URL" />
+            <CopyableLinkRow
+              label="Krótki link:"
+              value={shortUrl}
+              href={shortUrl}
+              copyLabel="krótki link"
+            />
             <p className="break-all">
               <span className="font-semibold">Stats ID:</span>{" "}
               <a href={statsUrl} className="text-primary underline" target="_blank" rel="noreferrer">
