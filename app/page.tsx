@@ -28,6 +28,7 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryAfter, setRetryAfter] = useState<number | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     if (typeof window === "undefined") {
       return "light";
@@ -44,6 +45,22 @@ export default function HomePage() {
     document.documentElement.classList.toggle("dark", theme === "dark");
     localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (retryAfter === null || retryAfter <= 0) return;
+
+    const timer = setInterval(() => {
+      setRetryAfter((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer);
+          return null;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [retryAfter]);
 
   const formattedStats = useMemo(() => {
     if (!stats) {
@@ -92,8 +109,17 @@ export default function HomePage() {
         body: JSON.stringify({ url }),
       });
       const payload = await response.json();
+
+      if (response.status === 429) {
+        const message = payload.error || "Przekroczono limit. Spróbuj ponownie za chwilę.";
+        setError(message);
+        setRetryAfter(payload.retryAfter || 30);
+        setIsLoading(false);
+        return;
+      }
+
       if (!response.ok) {
-        throw new Error(payload.error ?? "Could not shorten URL.");
+        throw new Error(payload.error ?? "Nie udało się skrócić URL.");
       }
 
       const nextResult = payload as ApiResult;
@@ -121,7 +147,7 @@ export default function HomePage() {
       
       await loadStats(nextResult.publicId);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : "Coś poszło nie tak.");
     } finally {
       setIsLoading(false);
     }
@@ -176,9 +202,9 @@ export default function HomePage() {
 
         <form
           onSubmit={onSubmit}
-          className="flex w-full max-w-3xl flex-col gap-3 rounded-3xl border border-slate-200 bg-surface p-3 shadow-sm sm:gap-4 sm:rounded-4xl sm:p-4 dark:border-slate-700"
+          className="relative flex w-full max-w-3xl flex-col gap-3 rounded-3xl border border-slate-200 bg-surface p-3 pb-10 shadow-sm sm:gap-4 sm:rounded-4xl sm:p-4 sm:pb-12 dark:border-slate-700"
         >
-          <div className="flex flex-col items-center gap-3 md:flex-row">
+          <div className="flex flex-col gap-3 md:flex-row md:gap-2">
             <input
               type="url"
               required
@@ -193,21 +219,18 @@ export default function HomePage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="h-12 w-full rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 md:h-14 md:w-auto md:px-8 md:text-lg cursor-pointer"
+              className="h-12 rounded-full bg-primary px-6 text-base font-semibold text-white shadow-lg shadow-green-500/30 transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-70 sm:h-auto sm:px-8 sm:text-lg md:h-14 md:px-6 md:text-base cursor-pointer"
             >
               {isLoading ? "Skracam..." : "Skróć link"}
             </button>
           </div>
-          {error ? (
-            <p className="text-left text-sm font-medium text-red-500">{error}</p>
-          ) : null}
-          <div className="flex items-center justify-center gap-2">
+          <div className="absolute left-1/2 bottom-0 z-10 -translate-x-1/2 translate-y-1/2">
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-500 dark:text-white dark:hover:bg-slate-600 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-200 dark:border-slate-600 dark:bg-slate-500 dark:text-white dark:hover:bg-slate-600 cursor-pointer"
             >
-              Inne funkcje (wkrótce)
-              <svg 
+              Inne funkcje
+              <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -222,6 +245,13 @@ export default function HomePage() {
               </svg>
             </button>
           </div>
+          {error ? (
+            <p className="text-left text-sm font-medium text-red-500">
+              {retryAfter
+                ? `Error: Przekroczono limit. Spróbuj ponownie za ${retryAfter >= 60 ? `${Math.floor(retryAfter / 60)}m` : `${retryAfter}s`}.`
+                : error}
+            </p>
+          ) : null}
         </form>
 
         {result ? (
