@@ -19,10 +19,12 @@ export default function CopyableLinkRow({ label, value, href, copyLabel }: Copya
   );
 
   return (
-    <p className="flex items-start gap-2 break-all">
-      <span className="shrink-0 font-semibold">{label}</span>
-      {content}
-      <CopyLinkButton value={value} label={copyLabel} />
-    </p>
+    <div className="space-y-1 break-all">
+      <span className="block font-semibold">{label}</span>
+      <div className="flex items-start gap-2">
+        {content}
+        <CopyLinkButton value={value} label={copyLabel} />
+      </div>
+    </div>
   );
 }
